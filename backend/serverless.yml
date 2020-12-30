@@ -3,12 +3,16 @@ service:
 
 plugins:
   - serverless-webpack
+  - serverless-reqvalidator-plugin
   - serverless-iam-roles-per-function
 
 provider:
+  tracing:
+    lambda: true
+    apiGateway: true
+
   name: aws
   runtime: nodejs12.x
-
   stage: ${opt:stage, 'dev'}
   region: ${opt:region, 'eu-west-1'}
 
@@ -23,7 +27,7 @@ provider:
       Action:
         - codedeploy:*
       Resource:
-        - '*'
+        - "*"
 
 custom:
   webpack:
@@ -36,10 +40,10 @@ custom:
         title: Todo App
         description: Serverless application for todo making
     models:
-      - name: CreateTodoRequest
+      - name: "CreateTodoRequest"
         contentType: application/json
         schema: ${file(models/create-todo-request.json)}
-      - name: UpdateTodoRequest
+      - name: "UpdateTodoRequest"
         contentType: application/json
         schema: ${file(models/update-todo-request.json)}
 functions:
@@ -59,6 +63,7 @@ functions:
         Action:
           - dynamodb:Query
         Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
+
   CreateTodo:
     handler: src/lambda/http/createTodo.handler
     events:
@@ -72,7 +77,7 @@ functions:
             summary: Create a new todo
             description: Create a new todo
             requestModels:
-              'application/json': CreateTodoRequest
+              "application/json": CreateTodoRequest
     iamRoleStatements:
       - Effect: Allow
         Action:
@@ -92,7 +97,7 @@ functions:
             summary: Update todo
             description: Updates a todo
             requestModels:
-              'application/json': UpdateTodoRequest
+              "application/json": UpdateTodoRequest
     iamRoleStatements:
       - Effect: Allow
         Action:
@@ -133,7 +138,7 @@ resources:
     RequestBodyValidator:
       Type: AWS::ApiGateway::RequestValidator
       Properties:
-        Name: 'request-body-validator'
+        Name: "request-body-validator"
         RestApiId:
           Ref: ApiGatewayRestApi
         ValidateRequestBody: true
@@ -173,9 +178,9 @@ resources:
         CorsConfiguration:
           CorsRules:
             - AllowedOrigins:
-                - '*'
+                - "*"
               AllowedHeaders:
-                - '*'
+                - "*"
               AllowedMethods:
                 - GET
                 - PUT
@@ -189,11 +194,11 @@ resources:
       Properties:
         PolicyDocument:
           Id: MyPolicy
-          Version: '2012-10-17'
+          Version: "2012-10-17"
           Statement:
             - Sid: PublicReadForGetBucketObjects
               Effect: Allow
-              Principal: '*'
-              Action: 's3:GetObject'
-              Resource: 'arn:aws:s3:::${self:provider.environment.IMAGES_S3_BUCKET}/*'
+              Principal: "*"
+              Action: "s3:GetObject"
+              Resource: "arn:aws:s3:::${self:provider.environment.IMAGES_S3_BUCKET}/*"
         Bucket: !Ref AttachmentsBucket
